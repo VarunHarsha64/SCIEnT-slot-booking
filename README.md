@@ -22,7 +22,7 @@ This is a Slot Booking System built using Express.js, Node.js, and React. The ap
 1. **Clone the repository:**
 
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/VarunHarsha64/SCIEnT-slot-booking.git
    cd slot-booking
    
 
@@ -77,6 +77,7 @@ This is a Slot Booking System built using Express.js, Node.js, and React. The ap
 - `DELETE /api/bookings/:id` - Cancel a booking
 - `GET /api/bookings/pending` - Get all pending bookings for admin approval
 - `POST /api/bookings/approve` - Approve a booking request
+- `POST /api/temp/seed-clubs` - Seed Temporary Accounts whose passwords have been decalred in the file temp folder for development purpose. 
 
 ### Sample Request for Booking
 
@@ -92,10 +93,6 @@ This is a Slot Booking System built using Express.js, Node.js, and React. The ap
 
 Slots are automatically created for the upcoming week every Sunday night. Each room has 30-minute slots from Monday to Sunday.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgments
 
 - Express.js
@@ -104,5 +101,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Nodemailer
 
 ```
-
-Feel free to replace `<your-repo-url>` with your actual repository URL and modify any other details as necessary!

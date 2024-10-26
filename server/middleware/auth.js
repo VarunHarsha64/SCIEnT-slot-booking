@@ -19,6 +19,6 @@ exports.protect = async (req, res, next) => {
 };
 
 exports.admin = (req, res, next) => {
-  if (!req.club.isAdmin) return res.status(403).send('Access denied.');
+  if (!req?.club?.isAdmin) return res.status(403).send('Access denied.');
   next();
 };

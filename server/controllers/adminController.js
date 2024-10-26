@@ -1,5 +1,6 @@
 // controllers/adminController.js
 const Booking = require('../models/Booking');
+const Club = require('../models/Club');
 const Slot = require('../models/Slot');
 
 exports.getPendingBookings = async (req, res) => {

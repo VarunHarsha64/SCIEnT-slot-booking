@@ -7,6 +7,7 @@ const bookingSchema = new mongoose.Schema({
   reason: { type: String, required: true },
   approved: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
+  slot: { type: mongoose.Schema.Types.ObjectId, ref: 'Slot', required: true },
 });
 
 bookingSchema.methods.cancel = function() {

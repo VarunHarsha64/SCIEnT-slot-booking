@@ -1,6 +1,3 @@
-
-
-```markdown
 # Slot Booking System
 
 This is a Slot Booking System built using Express.js, Node.js, and React. The application allows users to book rooms in designated time slots, with an approval process for bookings by an admin.
@@ -27,7 +24,7 @@ This is a Slot Booking System built using Express.js, Node.js, and React. The ap
    ```bash
    git clone <your-repo-url>
    cd slot-booking
-   ```
+   
 
 2. **Install dependencies:**
 

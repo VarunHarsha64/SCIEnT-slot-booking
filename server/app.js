@@ -6,7 +6,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 const cors = require("cors");
 const createSlotsForWeek = require("./utils/createSlots");
-const cron = require('node-cron')
+const cron = require("node-cron");
+const errorHandler = require('./middleware/errorHandler');
 
 //connect DB
 connectDB();
@@ -22,6 +23,10 @@ app.use("/api/bookings", require("./routes/bookingRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 
 app.use("/api/temp", require("./temporary/temp-route"));
+
+
+// error handler
+app.use(errorHandler);
 
 //Start Server
 
@@ -39,6 +44,17 @@ createSlotsForWeek()
   .catch((err) => {
     console.error("Error creating slots:", err);
   });
+
+const { resetCredits } = require("./controllers/clubController");
+
+cron.schedule("0 0 * * 1", () => {
+  // Every Monday at midnight
+  console.log("Resetting credits for all clubs...");
+  resetCredits()
+    .then(() => console.log("Credits reset successfully."))
+    .catch((err) => console.error("Error resetting credits:", err));
+});
+
 
 const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

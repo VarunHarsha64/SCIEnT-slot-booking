@@ -5,28 +5,58 @@ const Club = require("../models/Club");
 const sendApprovalEmail = require("../utils/email");
 
 exports.createBooking = async (req, res) => {
-  const { slotTime, reason, room } = req.body; // Include room identifier in the request body
+  const { slotTime, reason, room } = req.body; // Expecting slotTime, reason, and room in the request body
+  const currentTime = new Date();
 
-  // Find the slot for the requested time and room
-  const slot = await Slot.findOne({ startTime: slotTime, room });
-  if (!slot) return res.status(404).send("Slot not found.");
-  if (slot.booked) return res.status(403).send("Slot is already booked.");
+  try {
+    // Check if the booking time is at least 1 hour in the future
+    if (new Date(slotTime) < new Date(currentTime.getTime() + 60 * 60 * 1000)) {
+      return res.status(400).send("Booking must be at least 1 hour in the future.");
+    }
 
-  const club = await Club.findById(req.club._id);
-  if (club.credits <= 0 && club.name !== "Scient")
-    return res.status(403).send("Insufficient credits");
+    // Find the slot for the requested time and room
+    const slot = await Slot.findOne({ startTime: slotTime, room });
+    if (!slot) return res.status(404).send("Slot not found.");
+    if (slot.booked) return res.status(403).send("Slot is already booked.");
 
-  const booking = new Booking({
-    club: club._id,
-    slotTime,
-    reason,
-    approved: false,
-    slot: slot._id, // Reference the slot
-  });
-  await booking.save();
+    // Find the club making the booking request
+    const club = await Club.findById(req.club._id);
+    if (!club) return res.status(404).send("Club not found.");
 
-  sendApprovalEmail(club.name, slotTime, reason);
-  res.send({ message: "Booking request created, awaiting approval." });
+    // Check if the club has sufficient credits
+    if (club.credits <= 0 && club.name !== "Scient") {
+      return res.status(403).send("Insufficient credits to make a booking.");
+    }
+
+    // Create the booking
+    const booking = new Booking({
+      club: club._id,
+      slotTime,
+      reason,
+      approved: false,
+      slot: slot._id, // Associate the slot with the booking
+    });
+    await booking.save();
+
+    // Deduct a credit for the club (unless it's the "Scient" club with unlimited credits)
+    if (club.name !== "Scient") {
+      club.credits -= 1;
+      await club.save();
+    }
+
+    // Mark the slot as booked and associate it with the booking
+    slot.booked = true;
+    slot.booking = booking._id;
+    await slot.save();
+
+    // Send approval email (assuming sendApprovalEmail is defined to handle this)
+    sendApprovalEmail(club.name, slotTime, reason);
+
+    res.send({ message: "Booking request created, awaiting approval." });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    res.status(500).send("An error occurred while creating the booking.");
+  }
 };
 
 exports.cancelBooking = async (req, res) => {

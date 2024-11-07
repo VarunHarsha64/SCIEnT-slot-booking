@@ -9,3 +9,12 @@ exports.getCredits = async (req, res) => {
 exports.resetCredits = async () => {
   await Club.updateMany({}, { $set: { credits: 7 } });
 };
+
+exports.getAvailableSlots = async (req, res) => {
+  try {
+    const availableSlots = await Slot.find({ booked: false });
+    res.json(availableSlots);
+  } catch (error) {
+    res.status(500).send("Error fetching available slots");
+  }
+};

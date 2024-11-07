@@ -20,3 +20,25 @@ exports.login = async (req, res) => {
   const token = jwt.sign({ id: club._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
   res.json({ token });
 };
+
+exports.register = async (req, res) => {
+  const { name, password, isAdmin } = req.body;
+
+  try {
+    const existingClub = await Club.findOne({ name });
+    if (existingClub) return res.status(400).send("Club already exists.");
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const club = new Club({
+      name,
+      password: hashedPassword,
+      isAdmin: isAdmin || false,
+      credits: 7
+    });
+
+    await club.save();
+    res.status(201).send("Club registered successfully.");
+  } catch (err) {
+    res.status(500).send("Error registering club.");
+  }
+};

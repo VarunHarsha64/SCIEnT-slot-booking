@@ -1,16 +1,23 @@
-// app.js
 const express = require("express");
 const connectDB = require("./config/db");
-const app = express();
 const dotenv = require("dotenv");
-dotenv.config();
 const cors = require("cors");
-const createSlotsForWeek = require("./utils/createSlots");
 const cron = require("node-cron");
-const errorHandler = require('./middleware/errorHandler');
+const path = require('path');
+const createSlotsForWeek = require("./utils/createSlots");
+const errorHandler = require("./middleware/errorHandler");
+const { resetCredits } = require("./controllers/clubController");
 
-//connect DB
+// Load environment variables
+dotenv.config();
+
+
+// Connect to database
 connectDB();
+
+const app = express();
+// Serve static files from the 'public' directory
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Middleware
 app.use(cors());
@@ -21,40 +28,37 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/clubs", require("./routes/clubRoutes"));
 app.use("/api/bookings", require("./routes/bookingRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
-
 app.use("/api/temp", require("./temporary/temp-route"));
 
-
-// error handler
+// Error handler middleware
 app.use(errorHandler);
 
-//Start Server
-
-cron.schedule("59 23 * * 0", () => {
+// Schedule jobs
+cron.schedule("59 23 * * 0", async () => {
   console.log("Creating slots for the upcoming week...");
-  createSlotsForWeek()
-    .then(() => console.log("Slots for the week created successfully."))
-    .catch((err) => console.error("Error creating slots:", err));
-});
-
-createSlotsForWeek()
-  .then(() => {
-    console.log("Slots for the week created successfully on startup.");
-  })
-  .catch((err) => {
+  try {
+    await createSlotsForWeek();
+    console.log("Slots for the week created successfully.");
+  } catch (err) {
     console.error("Error creating slots:", err);
-  });
-
-const { resetCredits } = require("./controllers/clubController");
-
-cron.schedule("0 0 * * 1", () => {
-  // Every Monday at midnight
-  console.log("Resetting credits for all clubs...");
-  resetCredits()
-    .then(() => console.log("Credits reset successfully."))
-    .catch((err) => console.error("Error resetting credits:", err));
+  }
 });
 
+cron.schedule("0 0 * * 1", async () => {
+  console.log("Resetting credits for all clubs...");
+  try {
+    await resetCredits();
+    console.log("Credits reset successfully.");
+  } catch (err) {
+    console.error("Error resetting credits:", err);
+  }
+});
 
+// Create slots on startup
+createSlotsForWeek()
+  .then(() => console.log("Slots for the week created successfully on startup."))
+  .catch((err) => console.error("Error creating slots on startup:", err));
+
+// Start the server
 const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

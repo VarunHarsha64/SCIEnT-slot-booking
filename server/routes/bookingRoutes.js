@@ -3,6 +3,7 @@ const { protect, admin } = require('../middleware/auth');
 const {
   createBooking,
   cancelBooking,
+  getBookingHistory
 } = require('../controllers/bookingController');
 
 const {
@@ -18,5 +19,7 @@ router.delete('/:id', protect, cancelBooking);
 router.put('/approve', protect, admin, approveBooking);
 router.get('/pending/:slotId', protect, admin, getPendingBookingsForSlot);
 router.get('/pending', protect, admin, getAllPendingBookings); // New route for all pending bookings
+router.get('/history', protect, admin, getBookingHistory);
+
 
 module.exports = router;

@@ -86,3 +86,16 @@ exports.cancelBooking = async (req, res) => {
   await booking.remove(); // Remove the booking
   res.send({ message: "Booking cancelled successfully." });
 };
+// Fetch past bookings for a club
+exports.getBookingHistory = async (req, res) => {
+  const clubId = req.club._id;  // Assuming club information is available via auth middleware
+  
+  const bookings = await Booking.find({ club: clubId }).populate('slot');
+
+  if (!bookings.length) {
+    return res.status(404).send('No past bookings found.');
+  }
+
+  res.send(bookings);
+};
+

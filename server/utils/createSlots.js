@@ -1,48 +1,51 @@
-// utils/createSlots.js
-const Slot = require('../models/Slot'); // Slot model
+const Slot = require('../models/Slot');
 
 const createSlotsForWeek = async () => {
-  const now = new Date();
-  const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 7);
+  try {
+    await Slot.deleteMany({}); // Clear existing slots
+    console.log("Existing slots cleared.");
 
-  // Check if slots for the week already exist
-  const existingSlots = await Slot.find({
-    startTime: { $gte: startOfWeek, $lt: endOfWeek }
-  });
+    const rooms = ['Room1', 'Room2', 'Conference Hall'];
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Start of this week
 
-  if (existingSlots.length > 0) {
-    console.log('Slots for the week already exist. Deleting existing slots...');
-    await Slot.deleteMany({ startTime: { $gte: startOfWeek, $lt: endOfWeek } });
-    console.log('All existing slots deleted.');
-  }
+    for (let day = 0; day < 7; day++) {
+      for (let hour = 8; hour < 22; hour++) { // 8 AM to 10 PM
+        for (const room of rooms) {
+          const startTime = new Date(startOfWeek);
+          startTime.setDate(startOfWeek.getDate() + day);
+          startTime.setHours(hour, 0, 0, 0);
 
-  const rooms = ['Room1', 'Room2', 'Conference Hall']; // Define room identifiers
+          const endTime = new Date(startTime);
+          endTime.setMinutes(endTime.getMinutes() + 30); // 30-minute slot
 
-  // Create slots for each room
-  for (let day = 0; day < 7; day++) {
-    for (let hour = 0; hour < 24; hour++) {
-      for (const room of rooms) {
-        const startTime = new Date(startOfWeek);
-        startTime.setDate(startOfWeek.getDate() + day);
-        startTime.setHours(hour);
-        startTime.setMinutes(0);
-
-        console.log(`Creating slot for room ${room} at ${startTime}`);
-
-        // Create the 30-minute slot
-        const slot = new Slot({ room, startTime });
-        await slot.save();
-
-        // Create the next slot (30 minutes later)
-        const slotPlus30Min = new Slot({ room, startTime: new Date(startTime.getTime() + 30 * 60 * 1000) });
-        await slotPlus30Min.save();
+          await createSlot({
+            room,
+            startTime,
+            endTime,
+          });
+        }
       }
     }
-  }
 
-  console.log('Slots for the week created successfully.');
+    console.log("Slots for the week created successfully.");
+  } catch (error) {
+    console.error("Error creating slots:", error);
+  }
+};
+
+const createSlot = async (slotData) => {
+  try {
+    const slot = new Slot(slotData);
+    await slot.save();
+    console.log(`Slot created for ${slotData.room} at ${slotData.startTime}`);
+  } catch (error) {
+    if (error.code === 11000) {
+      console.warn("Duplicate slot detected, skipping:", slotData.startTime);
+    } else {
+      console.error("Unexpected error:", error);
+    }
+  }
 };
 
 module.exports = createSlotsForWeek;
